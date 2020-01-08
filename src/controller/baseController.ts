@@ -5,7 +5,9 @@ import validationSchema from '../models/validation'
 import bcrypt from 'bcrypt'
 import jsonwebtoken from 'jsonwebtoken'
 import * as dotenv from 'dotenv'
-const checkAuth = require('../guard/check-auth');
+import { checkPermission } from '../guard/check-permission'
+import { checkAuth } from '../guard/check-auth'
+
 
 class baseController {
     router: Router;
@@ -16,23 +18,20 @@ class baseController {
         this.router = Router();
         this.routes();
     }
-
+//get all User need Permission
     getAll = async (req: any,res: any) => {
-        if (!req.userData) {
-            return res.status(401).json({error: 'permission error'});
-        }
-        if (req.userData.role != 'ROLE_ADMIN') {
-            return res.status(401).json({error: 'permission error need Admin'});
+        if (!checkPermission(req.userData)) {
+            return res.status(200).json({error: 'permission denied'})
         }
         let users = await User.find()
         return res.status(200).json(users);
     }
-
+//get One User by Id need Permission
     get = async (req: Request, res: Response) => {
         let user = await User.findById(req.params.id)
         return res.status(200).json(user);
     }
-
+//Register new User no Permission needed
     add = async (req: Request, res: Response) => {
         const validObj = Joi.validate(req.body, validationSchema);
         if (validObj.error != null) {
@@ -60,12 +59,12 @@ class baseController {
         })
 
     }
-
+//Delete User by Id need Permission
     delete = async (req: Request, res: Response) => {
         await User.findByIdAndDelete(req.params.id)
         return res.status(200).json({ result: "User was removed" });
     }
-
+//Update User by Email need a Special Permission only for self
     update = async (req: Request, res: Response) => {
         let filter = {email: req.body.email}
         let user = new User({
@@ -78,7 +77,7 @@ class baseController {
         let userDTO = await User.findOneAndUpdate( filter , user, { new: true })
         return res.status(200).json(userDTO)      
     }
-
+//Login dont need Permission and Generate token
     login = async (req: Request, res: Response) => {
         let filter = { email: req.params.email }
         let check = await User.findOne(filter)
@@ -102,7 +101,7 @@ class baseController {
             return res.status(401).json({ error: 'Auth failed' })
         }
     }
-
+//Routes for User Controller
     routes() {
         //get all users
         this.router.get(this.baseURL, checkAuth, this.getAll);

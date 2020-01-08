@@ -26,25 +26,26 @@ const validation_1 = __importDefault(require("../models/validation"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const dotenv = __importStar(require("dotenv"));
-const checkAuth = require('../guard/check-auth');
+const check_permission_1 = require("../guard/check-permission");
+const check_auth_1 = require("../guard/check-auth");
 class baseController {
     constructor() {
         this.baseURL = process.env.BASE_URL || '/api/users';
         this.secretKey = process.env.SECRET_KEY || 'secretKey';
+        //get all User need Permission
         this.getAll = (req, res) => __awaiter(this, void 0, void 0, function* () {
-            if (!req.userData) {
-                return res.status(401).json({ error: 'permission error' });
-            }
-            if (req.userData.role != 'ROLE_ADMIN') {
-                return res.status(401).json({ error: 'permission error need Admin' });
+            if (!check_permission_1.checkPermission(req.userData)) {
+                return res.status(200).json({ error: 'permission denied' });
             }
             let users = yield User_1.default.find();
             return res.status(200).json(users);
         });
+        //get One User by Id need Permission
         this.get = (req, res) => __awaiter(this, void 0, void 0, function* () {
             let user = yield User_1.default.findById(req.params.id);
             return res.status(200).json(user);
         });
+        //Register new User no Permission needed
         this.add = (req, res) => __awaiter(this, void 0, void 0, function* () {
             const validObj = joi_1.default.validate(req.body, validation_1.default);
             if (validObj.error != null) {
@@ -71,10 +72,12 @@ class baseController {
                 }
             });
         });
+        //Delete User by Id need Permission
         this.delete = (req, res) => __awaiter(this, void 0, void 0, function* () {
             yield User_1.default.findByIdAndDelete(req.params.id);
             return res.status(200).json({ result: "User was removed" });
         });
+        //Update User by Email need a Special Permission only for self
         this.update = (req, res) => __awaiter(this, void 0, void 0, function* () {
             let filter = { email: req.body.email };
             let user = new User_1.default({
@@ -87,6 +90,7 @@ class baseController {
             let userDTO = yield User_1.default.findOneAndUpdate(filter, user, { new: true });
             return res.status(200).json(userDTO);
         });
+        //Login dont need Permission and Generate token
         this.login = (req, res) => __awaiter(this, void 0, void 0, function* () {
             let filter = { email: req.params.email };
             let check = yield User_1.default.findOne(filter);
@@ -114,15 +118,16 @@ class baseController {
         this.router = express_1.Router();
         this.routes();
     }
+    //Routes for User Controller
     routes() {
         //get all users
-        this.router.get(this.baseURL, checkAuth, this.getAll);
+        this.router.get(this.baseURL, check_auth_1.checkAuth, this.getAll);
         //get user by id
-        this.router.get(this.baseURL + '/:id', checkAuth, this.get);
+        this.router.get(this.baseURL + '/:id', check_auth_1.checkAuth, this.get);
         //delete user
-        this.router.delete(this.baseURL + '/:id', checkAuth, this.delete);
+        this.router.delete(this.baseURL + '/:id', check_auth_1.checkAuth, this.delete);
         //update user
-        this.router.put(this.baseURL, checkAuth, this.update);
+        this.router.put(this.baseURL, check_auth_1.checkAuth, this.update);
         //register new user
         this.router.post(this.baseURL, this.add);
         //user login
