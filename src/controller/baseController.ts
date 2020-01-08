@@ -5,14 +5,16 @@ import validationSchema from '../models/validation'
 import bcrypt from 'bcrypt'
 import jsonwebtoken from 'jsonwebtoken'
 import * as dotenv from 'dotenv'
-import { checkPermission } from '../guard/check-permission'
-import { checkAuth } from '../guard/check-auth'
+import { checkPermission } from '../services/check-permission'
+import { checkAuth } from '../services/check-auth'
+import { LoginService } from '../services/LoginService';
 
 
 class baseController {
     router: Router;
     baseURL = process.env.BASE_URL || '/api/users';
     secretKey= process.env.SECRET_KEY || 'secretKey';
+    loginService = new LoginService();
 
     constructor() {
         this.router = Router();
@@ -33,30 +35,12 @@ class baseController {
     }
 //Register new User no Permission needed
     add = async (req: Request, res: Response) => {
-        const validObj = Joi.validate(req.body, validationSchema);
-        if (validObj.error != null) {
-            return res.status(500).json({ error: validObj.error })
+        let user = await this.loginService.signUp(req);
+        if (user){
+            return res.status(200).json(user);
+        } else {
+            return res.status(500).json({error: 'Error during insert'})
         }
-        let filter = { email: req.body.email }
-        let check = await User.findOne(filter)
-        if (check != null) {
-            return res.status(500).json({ error: 'User Already Exist' })
-        }
-        bcrypt.hash(req.body.password, 10, (err, hash) => {
-            if (err) {
-                return res.status(500).json({ error: err });
-            }
-            else {
-                let user = new User({
-                    firstName: req.body.firstName,
-                    lastName: req.body.lastName,
-                    email: req.body.email,
-                    password: hash
-                });
-                User.create(user);
-                return res.json(user);
-            }
-        })
 
     }
 //Delete User by Id need Permission
@@ -78,27 +62,12 @@ class baseController {
         return res.status(200).json(userDTO)      
     }
 //Login dont need Permission and Generate token
-    login = async (req: Request, res: Response) => {
-        let filter = { email: req.params.email }
-        let check = await User.findOne(filter)
-        if (check == null) {
-            return res.status(401).json({ error: 'Auth failed' })
-        }
-        let valid = await bcrypt.compare(req.params.password, check.toObject().password)
-        if (valid) {
-            let token = jsonwebtoken.sign({
-                email: check.toObject().email,
-                id: check.toObject()._id,
-                role: check.toObject().role
-            }, this.secretKey, {
-                expiresIn: '1h'
-            })
-            return res.status(200).json({
-                message: 'Auth succes',
-                token: token
-            });
+    login = async (req: Request, res: Response) => {       
+        let token = await this.loginService.signIn(req);
+        if(token) {
+            return res.status(200).json(token);
         } else {
-            return res.status(401).json({ error: 'Auth failed' })
+            return res.status(401).json({ error: 'Auth failed' });
         }
     }
 //Routes for User Controller
@@ -116,7 +85,6 @@ class baseController {
         //user login
         this.router.get(this.baseURL + '/login/:email&:password', this.login);
     }
-
 
 }
 dotenv.config();

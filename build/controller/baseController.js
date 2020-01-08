@@ -21,17 +21,16 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const User_1 = __importDefault(require("../models/User"));
-const joi_1 = __importDefault(require("joi"));
-const validation_1 = __importDefault(require("../models/validation"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
-const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const dotenv = __importStar(require("dotenv"));
-const check_permission_1 = require("../guard/check-permission");
-const check_auth_1 = require("../guard/check-auth");
+const check_permission_1 = require("../services/check-permission");
+const check_auth_1 = require("../services/check-auth");
+const LoginService_1 = require("../services/LoginService");
 class baseController {
     constructor() {
         this.baseURL = process.env.BASE_URL || '/api/users';
         this.secretKey = process.env.SECRET_KEY || 'secretKey';
+        this.loginService = new LoginService_1.LoginService();
         //get all User need Permission
         this.getAll = (req, res) => __awaiter(this, void 0, void 0, function* () {
             if (!check_permission_1.checkPermission(req.userData)) {
@@ -47,30 +46,13 @@ class baseController {
         });
         //Register new User no Permission needed
         this.add = (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const validObj = joi_1.default.validate(req.body, validation_1.default);
-            if (validObj.error != null) {
-                return res.status(500).json({ error: validObj.error });
+            let user = yield this.loginService.signUp(req);
+            if (user) {
+                return res.status(200).json(user);
             }
-            let filter = { email: req.body.email };
-            let check = yield User_1.default.findOne(filter);
-            if (check != null) {
-                return res.status(500).json({ error: 'User Already Exist' });
+            else {
+                return res.status(500).json({ error: 'Error during insert' });
             }
-            bcrypt_1.default.hash(req.body.password, 10, (err, hash) => {
-                if (err) {
-                    return res.status(500).json({ error: err });
-                }
-                else {
-                    let user = new User_1.default({
-                        firstName: req.body.firstName,
-                        lastName: req.body.lastName,
-                        email: req.body.email,
-                        password: hash
-                    });
-                    User_1.default.create(user);
-                    return res.json(user);
-                }
-            });
         });
         //Delete User by Id need Permission
         this.delete = (req, res) => __awaiter(this, void 0, void 0, function* () {
@@ -92,24 +74,9 @@ class baseController {
         });
         //Login dont need Permission and Generate token
         this.login = (req, res) => __awaiter(this, void 0, void 0, function* () {
-            let filter = { email: req.params.email };
-            let check = yield User_1.default.findOne(filter);
-            if (check == null) {
-                return res.status(401).json({ error: 'Auth failed' });
-            }
-            let valid = yield bcrypt_1.default.compare(req.params.password, check.toObject().password);
-            if (valid) {
-                let token = jsonwebtoken_1.default.sign({
-                    email: check.toObject().email,
-                    id: check.toObject()._id,
-                    role: check.toObject().role
-                }, this.secretKey, {
-                    expiresIn: '1h'
-                });
-                return res.status(200).json({
-                    message: 'Auth succes',
-                    token: token
-                });
+            let token = yield this.loginService.signIn(req);
+            if (token) {
+                return res.status(200).json(token);
             }
             else {
                 return res.status(401).json({ error: 'Auth failed' });
