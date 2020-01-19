@@ -38,7 +38,7 @@ export class LoginService {
     }
     async signUp(req: any) {
         const validObj = Joi.validate(req.body, validationSchema);
-
+        
         if (validObj.error != null) {
             return null
         }
