@@ -70,6 +70,10 @@ class baseController {
             return res.status(401).json({ error: 'Auth failed' });
         }
     }
+    tryTimesheet = async (req: Request, res: Response) => {
+        const list = req.body
+        return res.status(200).json(list)
+    }
 //Routes for User Controller
     routes() {
         //get all users
@@ -84,6 +88,8 @@ class baseController {
         this.router.post(this.baseURL, this.add);
         //user login
         this.router.get(this.baseURL + '/login/:email&:password', this.login);
+        //try timesheet
+        this.router.post('/api/timesheet' , this.tryTimesheet)
     }
 
 }
