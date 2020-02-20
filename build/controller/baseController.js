@@ -21,7 +21,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const User_1 = __importDefault(require("../models/User"));
-const bcrypt_1 = __importDefault(require("bcrypt"));
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const dotenv = __importStar(require("dotenv"));
 const check_permission_1 = require("../services/check-permission");
 const check_auth_1 = require("../services/check-auth");
@@ -67,7 +67,7 @@ class baseController {
                 firstName: req.body.firstName,
                 lastName: req.body.lastName,
                 email: req.body.email,
-                password: yield bcrypt_1.default.hash(req.body.password, 10)
+                password: yield bcryptjs_1.default.hash(req.body.password, 10)
             });
             let userDTO = yield User_1.default.findOneAndUpdate(filter, user, { new: true });
             return res.status(200).json(userDTO);

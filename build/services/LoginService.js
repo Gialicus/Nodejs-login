@@ -13,7 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const User_1 = __importDefault(require("../models/User"));
-const bcrypt_1 = __importDefault(require("bcrypt"));
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const validation_1 = __importDefault(require("../models/validation"));
 const joi_1 = __importDefault(require("joi"));
@@ -29,7 +29,7 @@ class LoginService {
             if (check == null) {
                 return null;
             }
-            let valid = yield bcrypt_1.default.compare(req.params.password, check.toObject().password);
+            let valid = yield bcryptjs_1.default.compare(req.params.password, check.toObject().password);
             console.log(valid);
             if (valid) {
                 let token = jsonwebtoken_1.default.sign({
@@ -60,7 +60,7 @@ class LoginService {
             if (check != null) {
                 return null;
             }
-            let hash = yield bcrypt_1.default.hash(req.body.password, 10);
+            let hash = yield bcryptjs_1.default.hash(req.body.password, 10);
             let user = new User_1.default({
                 firstName: req.body.firstName,
                 lastName: req.body.lastName,

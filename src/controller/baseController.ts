@@ -2,7 +2,7 @@ import { Request, Response, Router } from 'express'
 import User from '../models/User'
 import Joi from 'joi';
 import validationSchema from '../models/validation'
-import bcrypt from 'bcrypt'
+import bcrypt from 'bcryptjs'
 import jsonwebtoken from 'jsonwebtoken'
 import * as dotenv from 'dotenv'
 import { checkPermission } from '../services/check-permission'
