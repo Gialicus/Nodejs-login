@@ -1,9 +1,6 @@
 import { Request, Response, Router } from 'express'
 import User from '../models/User'
-import Joi from 'joi';
-import validationSchema from '../models/validation'
 import bcrypt from 'bcryptjs'
-import jsonwebtoken from 'jsonwebtoken'
 import * as dotenv from 'dotenv'
 import { checkPermission } from '../services/check-permission'
 import { checkAuth } from '../services/check-auth'
@@ -70,10 +67,7 @@ class baseController {
             return res.status(401).json({ error: 'Auth failed' });
         }
     }
-    tryTimesheet = async (req: Request, res: Response) => {
-        const list = req.body
-        return res.status(200).json(list)
-    }
+
 //Routes for User Controller
     routes() {
         //get all users
@@ -88,8 +82,6 @@ class baseController {
         this.router.post(this.baseURL, this.add);
         //user login
         this.router.get(this.baseURL + '/login/:email&:password', this.login);
-        //try timesheet
-        this.router.post('/api/timesheet' , this.tryTimesheet)
     }
 
 }

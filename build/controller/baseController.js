@@ -82,10 +82,6 @@ class baseController {
                 return res.status(401).json({ error: 'Auth failed' });
             }
         });
-        this.tryTimesheet = (req, res) => __awaiter(this, void 0, void 0, function* () {
-            const list = req.body;
-            return res.status(200).json(list);
-        });
         this.router = express_1.Router();
         this.routes();
     }
@@ -103,8 +99,6 @@ class baseController {
         this.router.post(this.baseURL, this.add);
         //user login
         this.router.get(this.baseURL + '/login/:email&:password', this.login);
-        //try timesheet
-        this.router.post('/api/timesheet', this.tryTimesheet);
     }
 }
 dotenv.config();
