@@ -1,7 +1,7 @@
 {
-  "name": "prodotto-service-node",
+  "name": "user-api",
   "version": "1.0.0",
-  "description": "prodotto api",
+  "description": "users microservices",
   "main": "server.js",
   "scripts": {
     "ts": "tsc -w",
@@ -26,8 +26,8 @@
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "helmet": "^3.21.2",
-    "joi": "^14.3.1",
     "jsonwebtoken": "^8.5.1",
+    "joi": "^14.3.1",
     "mongoose": "^5.7.7",
     "morgan": "^1.9.1"
   },
@@ -37,5 +37,8 @@
     "@types/node": "^12.12.3",
     "nodemon": "^1.19.4",
     "typescript": "^3.6.4"
+  },
+  "engines": {
+    "node": "12.13.1"
   }
 }
